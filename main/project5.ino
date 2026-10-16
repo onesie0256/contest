@@ -3,6 +3,7 @@
  *180°回転すればコースアウトしない
  *若干だけ後退してから回転
  *回転する速度と時間を最適なものをみつける(もしくは組み合わせ)
+ *S=150,T=2000   S=200,T=900
 **/
 
 #include <Wire.h>
@@ -15,8 +16,8 @@ ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON);
 
 // ===== ここだけ変える =====
-const int ROT_SPEED = 150;              // 回転速度
-const unsigned long ROT_TIME_MS = 600;  // 回転時間[ms]
+const int ROT_SPEED = 200;              // 回転速度
+const unsigned long ROT_TIME_MS = 1200;  // 回転時間[ms]
 const int ROT_DIR = 1;                  // 1=左回り, -1=右回り
 const int HSIGN = 1;                    // 回転量が「実際の 360-回転量」で出たら -1 にする
 
@@ -58,11 +59,11 @@ float heading() {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial1.begin(9600);
   Wire.begin();
   compass.init();
   compass.enableDefault();
-  Serial.println("1回目のボタン: キャリブレーション / 2回目以降: 1回回す");
+  Serial1.println("1回目のボタン: キャリブレーション / 2回目以降: 1回回す");
 }
 
 void loop() {
@@ -71,7 +72,7 @@ void loop() {
   if (!calibrated) {
     calibrationCompass();
     calibrated = true;
-    Serial.println("準備完了");
+    Serial1.println("準備完了");
     return;
   }
 
@@ -83,8 +84,8 @@ void loop() {
   float after = heading();
 
   float rot = fmod(HSIGN * ROT_DIR * (after - before) + 720, 360);
-  Serial.print("speed=");  Serial.print(ROT_SPEED);
-  Serial.print(" time=");  Serial.print(ROT_TIME_MS);
-  Serial.print(" dir=");   Serial.print(ROT_DIR);
-  Serial.print(" rot[deg]="); Serial.println(rot, 1);
+  Serial1.print("speed=");  Serial1.print(ROT_SPEED);
+  Serial1.print(" time=");  Serial1.print(ROT_TIME_MS);
+  Serial1.print(" dir=");   Serial1.print(ROT_DIR);
+  Serial1.print(" rot[deg]="); Serial1.println(rot, 1);
 }
