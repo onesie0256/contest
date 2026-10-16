@@ -10,8 +10,12 @@
 Pushbutton button(ZUMO_BUTTON);
 ZumoMotors motors;
 
-const int SPEED = 100;              // 速度はここだけ変えれば前進・後進の両方に反映
+const int START_SPEED = 70;          // 初期速度
+const int SPEED_STEP = 10;           // 1周ごとの速度の増加量
+const int STOP_SPEED = 210;          // この速度になったら停止したままにする
 const unsigned long RUN_TIME = 3000; // 走行時間[ms]
+
+int speed = START_SPEED;             // 現在の速度（前進・後進の両方に反映）
 
 void stopMotors() {
   motors.setSpeeds(0, 0);
@@ -20,8 +24,16 @@ void stopMotors() {
 void setup() {}
 
 void loop() {
+  // speedが210に達したら、ボタンを押しても動かないよう停止し続ける
+  if (speed >= STOP_SPEED) {
+    stopMotors();
+    while (true) {
+      stopMotors();
+    }
+  }
+
   // 前進（3秒で自動停止）
-  motors.setSpeeds(SPEED, SPEED);
+  motors.setSpeeds(speed, speed);
   delay(RUN_TIME);
   stopMotors();
 
@@ -30,11 +42,14 @@ void loop() {
   delay(500);   // 手が離れる時間を確保（任意）
 
   // 後進（3秒で自動停止）
-  motors.setSpeeds(-SPEED, -SPEED);
+  motors.setSpeeds(-speed, -speed);
   delay(RUN_TIME);
   stopMotors();
 
   // 次の前進に入る前にもう一度ボタン待ち（不要なら削除）
   button.waitForButton();
   delay(500);
+
+  // 1周終わったので速度を上げる
+  speed += SPEED_STEP;
 }
