@@ -13,7 +13,7 @@ ZumoMotors motors;
 const int START_SPEED = 70;          // 初期速度
 const int SPEED_STEP = 10;           // 1周ごとの速度の増加量
 const int STOP_SPEED = 210;          // この速度になったら停止したままにする
-const unsigned long RUN_TIME = 3000; // 走行時間[ms]
+const unsigned long RUN_TIME = 1500; // 走行時間[ms]
 
 int speed = START_SPEED;             // 現在の速度（前進・後進の両方に反映）
 
