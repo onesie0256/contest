@@ -120,6 +120,5 @@ void loop() {
       Serial1.println(startDir_G);
     }
   }
-
-  // ここに競技用の処理を書く(startDir_G を参照する)
+//エラーあり
 }
