@@ -9,7 +9,7 @@ bool ModeManager::set(ModeClass *target)
 {
   Mode mode = target->getMode();
   modeMap.emplace(mode , target);
-  //MySerial.println("set");
+  //MySerial.println("set");  //ここで送信するとメモリダンプする
   return true;
 }
 
