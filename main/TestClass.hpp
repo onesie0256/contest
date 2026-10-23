@@ -1,4 +1,5 @@
 #include "head.hpp"
+#pragma once
 
 class A : public ModeClass
 {
@@ -30,7 +31,7 @@ public:
     // MySerial.print(" ");
     // MySerial.println(nowTime);
 
-    if (nowTime - startTime >= 500){
+    if (nowTime - startTime >= 5000){
       //noTone(3);
       MM.changeMode(Mode::Forward);
     }

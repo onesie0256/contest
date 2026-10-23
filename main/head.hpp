@@ -1,7 +1,8 @@
 #pragma once
 #include <map>
 
-#define MySerial Serial1
+#define MySerial Serial
+
 
 /**
 * モードそれぞれを表す.モード1とか2とかの数字では表さない!
@@ -37,10 +38,23 @@ enum class Mode
   Num
 };
 
+/* _Gが付いてる変数の内容がprocessingに送られる! */
+extern Mode mode_G;
+extern uint8_t r_G;
+extern uint8_t g_G;
+extern uint8_t b_G;
+extern uint8_t color_G;
+extern uint8_t distance_G;
+extern uint16_t pitch_G;
+extern uint16_t roll_G;
+extern uint16_t yaw_G;
+extern uint8_t isStacking_G;
+
 class ModeClass;
 class ModeManager;
 class A;
 class B;
+class Reset;
 
 /**
 * モードを管理するマネージャークラス.林担当
@@ -88,3 +102,5 @@ enum class Color
   Yellow,
   UNKNOWN
 };
+
+

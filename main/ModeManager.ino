@@ -85,3 +85,4 @@ void ModeManager::changeModeForce(Mode next)
   this->modeChangeProtect = true;
   this->wasModeChanged = true;
 }
+
