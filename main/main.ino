@@ -4,6 +4,11 @@
 #include "head.hpp"
 #include "TestClass.hpp"
 #include "PacketType.h"
+#include <Pushbutton.h>
+#include <ZumoMotors.h>
+
+ZumoMotors motors;
+Pushbutton button(ZUMO_BUTTON);
 
 /* _Gが付いてる変数の内容がprocessingに送られる! */
 Mode mode_G = Mode::Mode0_A;
@@ -22,18 +27,31 @@ B b;
 
 void setup()
 {
-  MySerial.begin(115200);
+  MySerial.begin(9600);
   while (!MySerial){
     delay(1);
   }
   a = A();
   b = B();
+
+  button.waitForButton(); 
+  auto_calib();
+  tone(3,220);
+  delay(500);
+  noTone(3);
   //MySerial.println("start");
   pinMode(13,OUTPUT);
 }
 
 void loop()
 {
+  getColor();
+  color_G = (uint8_t)Nearest_Neighbor();
+
+   if (button.isPressed() == true) { //ユーザボタンが押されている間は後転 
+    MM.changeModeForce(Mode::Reset); 
+  }
+
   mode_G = MM.play();
   receive();
   delay(50);

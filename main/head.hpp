@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 
-#define MySerial Serial
+#define MySerial Serial1
 
 /**
 * モードそれぞれを表す.モード1とか2とかの数字では表さない!
@@ -29,6 +29,8 @@ enum class Mode
   /* A,B共通 */
   BlackLine,//黒い線を踏んだ時,フィールドに復帰する
   Avoid,    //自チーム・相手チームの機体を回避する
+  Reset,    //リセットモードに遷移
+
   /* エラーが起きた時に */
   Error,
   /* モード数 */
@@ -72,3 +74,17 @@ public:
 };
 
 ModeManager MM;
+
+/* 色 */
+enum class Color
+{
+  White,
+  Black,
+  Red,
+  Green,
+  Blue,
+  Cyan,
+  Magenta,
+  Yellow,
+  UNKNOWN
+};

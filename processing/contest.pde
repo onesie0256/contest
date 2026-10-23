@@ -40,14 +40,27 @@ void draw() {
   background(red_p,green_p,blue_p);
   stroke(0);
   fill(255);
-  rect(0, height-100, 350, 100);
+  rect(0, height-200, 350, 200);
   textSize(50);
   fill(0);
-  text("mode=", 20, height-10);
-  text((int)mode, 200, height-10);
+  text("mode=", 20, height-10); text((int)mode, 200, height-10);
   String rgbText = "R:"+str(red_p)+"G:"+str(green_p)+"B:"+str(blue_p);
   text(rgbText, 20, height-60);
   noFill();
+  textSize(20);
+  text("color: "+str(color_p), 20, height-180);
+  text("distance: "+str(distance_p)+" cm", 20, height-160);
+  text("color: "+str(color_p), 20, height-180);
+  text("pitch: "+str(pitch_p)+"°  roll: "+str(yaw_p)+"°  yaw: "+str(yaw_p)+"°", 20, height-140);
+  if (isStacking_p == 1){
+    fill(255,0,0);
+    text("stacking!!!", 20, height-120);
+    fill(0);
+  }
+  else {
+    text("not stacking", 20, height-120);
+  }
+  
   
   if (millis() - time >= timeOut){
     send_request();

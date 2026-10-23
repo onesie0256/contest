@@ -28,13 +28,17 @@ void sendData() {
 bool receive()
 {
     bool wasReceived = false;
-    if (MySerial.available() > 2) {
+
+    if (MySerial.available() > 0) {
+        // digitalWrite(13,HIGH);
+        // delay(1000);
+        // digitalWrite(13,LOW);
         char firstByte = MySerial.read();
         while (firstByte != 'H') {
-            firstByte = MySerial.read();
             if (MySerial.available() == 0){
                 return false;
             }
+            firstByte = MySerial.read();
         }
         uint8_t myAdress = (uint8_t)MyAdress;
         uint8_t receivedAdress = MySerial.read();
@@ -42,6 +46,9 @@ bool receive()
             return false;
         }
         wasReceived = true;
+        // digitalWrite(13,HIGH);
+        // delay(1000);
+        // digitalWrite(13,LOW);
         PacketType type = (PacketType)MySerial.read();
         switch (type) {
             case PacketType::Data: {

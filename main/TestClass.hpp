@@ -15,13 +15,13 @@ public:
   void whenChanged() override{
     isFirst = true; //
     f += 55;
-    MySerial.println("A");
+    //MySerial.println("A");
   }
 
   void execute(long startTime , long nowTime){
     if (isFirst){
       //tone(3,this->f);
-      MySerial.println("tone");
+      //MySerial.println("tone");
       isFirst = false;
     }
 
@@ -47,11 +47,12 @@ public:
 
   void whenChanged() override{
     noTone(3);
-    MySerial.println("B");
+    //MySerial.println("B");
   }
   void execute(long startTime , long nowTime){
-    if (nowTime - startTime >= 2000){
-      MM.changeMode(Mode::Mode0_A);
-    }
+    // if (nowTime - startTime >= 2000){
+    //   MM.changeMode(Mode::Mode0_A);
+    // }
+    ;
   }
 };

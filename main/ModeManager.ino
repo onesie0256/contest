@@ -54,14 +54,16 @@ void ModeManager::changeMode(Mode next)
 {
   MySerial.println((int)next);
   if (!(0 <= (int)next && next < Mode::Num)){
-    MySerial.println("err1");
+    //MySerial.println("err1");
     return;
   }
 
   if (this->modeChangeProtect){
-    MySerial.println("err2");
+    //MySerial.println("err2");
     return;
   }
+
+  
 
   this->modePrev = this->modeNow;
   this->modeNow  = next;
@@ -71,6 +73,10 @@ void ModeManager::changeMode(Mode next)
 void ModeManager::changeModeForce(Mode next)
 {
   if (!(0 <= (int)next && next < Mode::Num)){
+    return;
+  }
+
+  if (next == this->modeNow){
     return;
   }
 
