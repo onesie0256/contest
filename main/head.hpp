@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 
-#define MySerial Serial
+#define MySerial Serial1
 
 /**
 * モードそれぞれを表す.モード1とか2とかの数字では表さない!
@@ -27,6 +27,7 @@ enum class Mode
   Peak,     //頂上でコップを落とす
   Descent,  //山下り
   /* A,B共通 */
+  CompassCalib,//初めにキャリブレーションをする
   BlackLine,//黒い線を踏んだ時,フィールドに復帰する
   Avoid,    //自チーム・相手チームの機体を回避する
   /* エラーが起きた時に */
@@ -34,6 +35,27 @@ enum class Mode
   /* モード数 */
   Num
 };
+
+enum class FieldColor : uint8_t {
+  White,
+  Black,
+  Red,
+  Blue,
+  Other
+};
+
+enum class Side : uint8_t {
+  North,
+  South,
+  Unknown
+};
+
+extern ZumoMotors motors;
+extern Pushbutton button;
+extern Side startSide;
+
+FieldColor measureColor();
+float readHeading();
 
 class ModeClass;
 class ModeManager;
@@ -57,6 +79,7 @@ public:
   bool set(ModeClass *target);
   Mode play();
   void changeMode(Mode next);
+  Mode getModePrev();
   void changeModeForce(Mode next);
 };
 
