@@ -1,15 +1,11 @@
-/**
-仮のコードです.
-*/
+#include <Wire.h>
+#include <ZumoMotors.h>
+#include <Pushbutton.h>
 #include "head.hpp"
 #include "TestClass.hpp"
 #include "PacketType.h"
 #include "ResetClass.hpp"
-#include <Pushbutton.h>
-#include <ZumoMotors.h>
 
-ZumoMotors motors;
-Pushbutton button(ZUMO_BUTTON);
 
 /* _Gが付いてるこれらの変数の内容がprocessingに送られる! */
 Mode mode_G = Mode::Mode0_A;
@@ -25,8 +21,11 @@ uint8_t isStacking_G = 0;
 
 
 A a;
-B b;
 Reset r;
+Pro1 pro1;
+Pro4 pro4;
+Pro5 pro5;
+
 
 void setup()
 {
@@ -35,7 +34,6 @@ void setup()
     delay(1);
   }
   a = A();
-  b = B();
   r = Reset();
 
   button.waitForButton(); 
@@ -43,7 +41,10 @@ void setup()
   tone(3,220);
   delay(500);
   noTone(3);
-  //MySerial.println("start");
+
+  setupCompass();
+  calibrationCompass();
+
   pinMode(13,OUTPUT);
 }
 
@@ -58,6 +59,7 @@ void loop()
     MM.changeModeForce(Mode::Reset); 
   }
 
+  checkBlackLine();
   mode_G = MM.play();
   receive();
   delay(50);

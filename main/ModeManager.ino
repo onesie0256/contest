@@ -70,6 +70,11 @@ void ModeManager::changeMode(Mode next)
   this->wasModeChanged = true;
 }
 
+Mode ModeManager::getModePrev() //割り込み処理の後に元に戻る関数の追加、不要であれば削除してください
+{
+  return this->modePrev;
+}
+
 void ModeManager::changeModeForce(Mode next)
 {
   if (!(0 <= (int)next && next < Mode::Num)){
