@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <queue>
 
 #define MySerial Serial1
 
@@ -115,5 +116,20 @@ public:
   virtual void execute(long startTime , long nowTime)=0;
 };
 
+class Timer
+{
+private:
+  int flagStart = 0; // 0:待ち状態，1:現在計測中
+  unsigned long startTime = 0;
+public:
+  int maintainState(unsigned long period);
+  void reset();
+  void start();
+};
+
+class Buzzer
+{
+private:
+}
 float readHeading();
 
