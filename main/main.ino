@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <LSM303.h> //何故かここを消すとコンパイルエラー
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
 #include "head.hpp"
@@ -18,13 +19,16 @@ int16_t pitch_G = 0;
 int16_t roll_G = 0;
 int16_t yaw_G = 0;
 uint8_t isStacking_G = 0;
+uint16_t angle_G = 0;
 
 
 A a;
 Reset r;
-Pro1 pro1;
-Pro4 pro4;
-Pro5 pro5;
+FindMount fm;
+Climb c;
+// Pro1 pro1;
+// Pro4 pro4;
+// Pro5 pro5;
 
 
 void setup()
@@ -35,9 +39,18 @@ void setup()
   }
   a = A();
   r = Reset();
+  fm = FindMount();
+  c = Climb();
+
+  // button.waitForButton(); 
+  // auto_calib();
+  // tone(3,220);
+  // delay(500);
+  // noTone(3);
 
   button.waitForButton(); 
-  auto_calib();
+  setupCompass();
+  calibrationCompass();
   tone(3,220);
   delay(500);
   noTone(3);
@@ -50,6 +63,7 @@ void setup()
 void loop()
 {
   getColor();
+  averageHeadingLP();
   color_G = (uint8_t)Nearest_Neighbor(); 
    if (button.isPressed() == true) { //ユーザボタンが押されている間は後転
       // digitalWrite(13,HIGH);
