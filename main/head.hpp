@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <queue>
 
 #define MySerial Serial1
 
@@ -66,16 +67,19 @@ extern uint8_t g_G;
 extern uint8_t b_G;
 extern uint8_t color_G;
 extern uint8_t distance_G;
-extern uint16_t pitch_G;
-extern uint16_t roll_G;
-extern uint16_t yaw_G;
+extern int16_t pitch_G;
+extern int16_t roll_G;
+extern int16_t yaw_G;
 extern uint8_t isStacking_G;
+extern uint16_t angle_G;
 
 class ModeClass;
 class ModeManager;
 class A;
 class B;
 class Reset;
+class FindMount;
+class Climb;
 
 Pushbutton button(ZUMO_BUTTON);
 ZumoMotors motors;
@@ -88,7 +92,7 @@ class ModeManager
 {
 private:
   std::map<Mode , ModeClass*> modeMap{};  //モードクラスの集合
-  Mode modeNow = Mode::Mode0_A;           //現在のモード
+  Mode modeNow = Mode::FindMount;           //現在のモード
   Mode modePrev = Mode::Mode0_A;          //1つ前のモード
   bool wasModeChanged = false;            //モードの変更に使用するフラグ
   bool modeChangeProtect = false;
@@ -115,5 +119,20 @@ public:
   virtual void execute(long startTime , long nowTime)=0;
 };
 
+class Timer
+{
+private:
+  int flagStart = 0; // 0:待ち状態，1:現在計測中
+  unsigned long startTime = 0;
+public:
+  int maintainState(unsigned long period);
+  void reset();
+  void start();
+};
+
+// class Buzzer
+// {
+// private:
+// }
 float readHeading();
 

@@ -1,4 +1,25 @@
 import processing.serial.*;
+
+// head.hpp の enum class Color と同じ順番にすること
+final String[] colorToStr = {
+  "white", "black", "red", "green", "blue", "cyan", "magenta", "yellow", "UNKNOWN"
+};
+
+// head.hpp の enum class Mode と同じ順番にすること
+final String[] modeToStr = {
+  "Mode0_A", "Forward", "Rotate", "Judge", "Obtain", "Return", "Resume",
+  "Mode0_B", "FindMount", "Climb", "Peak", "Descent",
+  "CompassCalib", "BlackLine", "Avoid", "Reset", "Error"
+};
+
+// 範囲外の値が来ても落ちないように文字列へ変換する
+String lookup(String[] table, int index) {
+  if (index < 0 || index >= table.length) {
+    return "?(" + index + ")";
+  }
+  return table[index];
+}
+
 Serial port;
 int mode;
 int green, red, blue, green_p, red_p, blue_p;
@@ -15,7 +36,6 @@ int pitch_p = 0;
 int roll_p = 0;
 int yaw_p = 0;
 int isStacking_p = 0;
-
 
 void setup() {
   size(1200, 400);
@@ -43,15 +63,15 @@ void draw() {
   rect(0, height-200, 350, 200);
   textSize(50);
   fill(0);
-  text("mode=", 20, height-10); text((int)mode, 200, height-10);
+  text("mode=", 20, height-10); text(lookup(modeToStr, mode), 200, height-10);
   String rgbText = "R:"+str(red_p)+"G:"+str(green_p)+"B:"+str(blue_p);
   text(rgbText, 20, height-60);
   noFill();
   textSize(20);
-  text("color: "+str(color_p), 20, height-180);
+  text("color: "+lookup(colorToStr, color_p), 20, height-180);
   text("distance: "+str(distance_p)+" cm", 20, height-160);
-  text("color: "+str(color_p), 20, height-180);
-  text("pitch: "+str(pitch_p)+"°  roll: "+str(yaw_p)+"°  yaw: "+str(yaw_p)+"°", 20, height-140);
+  //text("color: "+str(color_p), 20, height-180);
+  text("pitch: "+str(pitch_p)+"°  roll: "+str(roll_p)+"°  yaw: "+str(yaw_p)+"°", 20, height-140);
   if (isStacking_p == 1){
     fill(255,0,0);
     text("stacking!!!", 20, height-120);
@@ -78,8 +98,49 @@ void keyPressed() { // keyが押されると呼ばれる関数
   }
 }
 
+int receiveData(Serial p)
+{
+  if (p.available() < 13){
+    return 0;
+  }
+ 
+  mode =  p.read();
+  red =  p.read();
+  green = p.read();
+  blue =  p.read();
+  color_p = p.read();
+  distance_p = p.read();
+  pitch_p = read2byte(p);
+  roll_p = read2byte(p);
+  yaw_p = read2byte(p);
+  isStacking_p = p.read();
+
+  print(" RGB = ");
+  println(red, green, blue);
+  print(" color =");
+  println(color_p);
+  print(" distance =");
+  println(distance_p);
+  print(" attitude =");
+  println(pitch_p,roll_p,yaw_p);
+  print(" isStacking =");      
+  println(isStacking_p);
+  return 13;
+}
+
+int receiveStr(Serial p)
+{
+  int l = p.available();
+  int received = 0;
+  
+  //for (;l > 0; l--){
+  //  ;
+  //}
+  return 0;
+}
 
 // 通信方式2
+final int basicLen = 2; // Hの後ろのヘッダ(アドレス, パケット種別)のバイト数
 void serialEvent(Serial p) {
 
   int l = p.available(); // 受信バッファ内のデータ数
@@ -93,36 +154,21 @@ void serialEvent(Serial p) {
       l--; // 受信バッファのデータ数の修正
     }
     if (sof_f == true) { // SoFを発見している場合
-      if (l >= 15) { // 受信バッファのデータ数が15以上
-        
+      if (l >= basicLen) { // 受信バッファのデータ数がヘッダ長以上
         recentAddress = p.read();
         packet = p.read();
-        mode =  p.read();
-        red =  p.read();
-        green = p.read();
-        blue =  p.read();
-        color_p = p.read();
-        distance_p = p.read();
-        pitch_p = read2byte(p);
-        roll_p = read2byte(p);
-        yaw_p = read2byte(p);
-        isStacking_p = p.read();
-
-        print(" RGB = ");
-        println(red, green, blue);
-        print(" color =");
-        println(color_p);
-        print(" distance =");
-        println(distance_p);
-        print(" attitude =");
-        println(pitch_p,roll_p,yaw_p);
-        print(" isStacking =");
-        println(isStacking_p);
         
+        switch (packet){
+          case 1:
+          l -= receiveData(p);
+          break;
+          default:
+          break;
+        }
 
         bod_f = true; // 1組のデータを読み込んだ
         sof_f = false; // 1組のデータを読み取ったのでSoFの発見をクリア
-        l -= 6; // 受信バッファのデータ数の修正
+        l -= basicLen; // 受信バッファのデータ数の修正
         time = millis();
       } else { // 受信バッファのデータ数不足の場合
         break; // whileループを中断
