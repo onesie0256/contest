@@ -14,9 +14,9 @@ uint8_t g_G = 0;
 uint8_t b_G = 0;
 uint8_t color_G = 0;
 uint8_t distance_G = 0;
-uint16_t pitch_G = 0;
-uint16_t roll_G = 0;
-uint16_t yaw_G = 0;
+int16_t pitch_G = 0;
+int16_t roll_G = 0;
+int16_t yaw_G = 0;
 uint8_t isStacking_G = 0;
 
 

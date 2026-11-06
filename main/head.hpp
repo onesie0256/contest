@@ -1,10 +1,7 @@
 #pragma once
 #include <map>
-<<<<<<< HEAD
 #include <math.h>
-=======
 #include <queue>
->>>>>>> origin/master
 
 #define MySerial Serial1
 
