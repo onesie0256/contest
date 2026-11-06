@@ -31,10 +31,10 @@ public:
     // MySerial.print(" ");
     // MySerial.println(nowTime);
 
-    if (nowTime - startTime >= 5000){
-      //noTone(3);
-      MM.changeMode(Mode::Forward);
-    }
+    // if (nowTime - startTime >= 5000){
+    //   //noTone(3);
+    //   MM.changeMode(Mode::Forward);
+    // }
   }
 };
  

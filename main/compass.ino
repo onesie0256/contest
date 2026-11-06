@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <LSM303.h>
+#include <math.h>
 
 #define CALIBRATION_SAMPLES 50  // 地磁気キャリブレーション時のサンプル取得回数
 #define CRB_REG_M_2_5GAUSS 0x60 // ±2.5ガウス設定
@@ -46,8 +47,8 @@ float readHeading()
   float y_scaled = 2.0 * ((float)compass.m.y - compass.m_min.y) / y_span - 1.0;
 
   float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
-  if (angle < 0)
-    angle += 360;
+  if (angle < -90)
+    angle += 270;
   return angle;
 }
 
