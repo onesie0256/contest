@@ -62,5 +62,6 @@ void loop()
   checkBlackLine();
   mode_G = MM.play();
   receive();
+  debugStatus();
   delay(50);
 }
