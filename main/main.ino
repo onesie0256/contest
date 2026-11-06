@@ -51,12 +51,9 @@ void setup()
 
   button.waitForButton(); 
   setupCompass();
-  calibrationCompass();
   tone(3,220);
   delay(200);
   noTone(3);
-
-  setupCompass();
 
   pinMode(13,OUTPUT);
 }

@@ -12,7 +12,7 @@ Side startSide = Side::Unknown;
 
 static const float COMPASS_NS_TOLERANCE_DEG = 20.0;
 static const int COMPASS_SAMPLES = 3;
-static const int COMPASS_SAMPLE_MS = 100;
+static const int COMPASS_SAMPLE_MS = 1000;
 static const int COMPASS_NEED_SAME = 2;
 
 int norm(float v, float vmin, float vmax)
@@ -121,6 +121,10 @@ Side judgeStartSide()
   int north = 0;
   int south = 0;
   for (int i = 0; i < COMPASS_SAMPLES; i++){
+    if (i < COMPASS_SAMPLES - 1){
+      delay(COMPASS_SAMPLE_MS);
+    }
+
     Side side = classifyStartSide(readHeading());
     if (side == Side::North) north++;
     if (side == Side::South) south++;
@@ -142,13 +146,13 @@ void calibrationStartSide()
     button.waitForButton();
     startSide = judgeStartSide();
     if (startSide == Side::Unknown){
-      MySerial.println(F("東西向き(または判定不能)でした。向きを直して、もう一度ボタンを押してください"));
+      MySerial.println(F("判定に失敗しました。向きを直して、もう一度ボタンを押してください"));
     }
   }
   if (startSide == Side::North){
-    MySerial.println(F("成功: スタート位置での向きを記憶しました (北)"));
+    MySerial.println(F("成功: スタート位置での向きを記憶 (北)"));
   }else{
-    MySerial.println(F("成功: スタート位置での向きを記憶しました (南)"));
+    MySerial.println(F("成功: スタート位置での向きを記憶 (南)"));
   }
 }
 
