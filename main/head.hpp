@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <math.h>
 
 #define MySerial Serial1
 
@@ -28,8 +29,8 @@ enum class Mode
   Peak,     //頂上でコップを落とす
   Descent,  //山下り
   /* A,B共通 */
-  CompassCalib,//初めにキャリブレーションをする
-  BlackLine,//黒い線を踏んだ時,フィールドに復帰する
+  // 12は旧CompassCalib。通信で使う後続モードの番号を維持する。
+  BlackLine = 13,//黒い線を踏んだ時,フィールドに復帰する
   Avoid,    //自チーム・相手チームの機体を回避する
   Reset,    //リセットモードに遷移
 
@@ -58,6 +59,8 @@ enum class Side : uint8_t {
   South,
   Unknown
 };
+
+extern Side startSide;
 
 /* _Gが付いてる変数の内容がprocessingに送られる! */
 extern Mode mode_G;
@@ -98,6 +101,7 @@ public:
   bool set(ModeClass *target);
   Mode play();
   void changeMode(Mode next);
+  Mode getModeNow() const;
   Mode getModePrev();
   void changeModeForce(Mode next);
 };
@@ -116,4 +120,5 @@ public:
 };
 
 float readHeading();
+float normalizeHeading(float heading);
 

@@ -131,20 +131,22 @@ public:
   }
 };
 
- /*******************************************
- *pro5 / BlackLine : 黒線を踏んだ時フィールドに復帰
- *コンパイルエラーにならないようmain.inoにcheckBlackLine()で判定させている
- *補足 統合した方がコードが簡略化できる可能性、ただし条件分岐が多いのでBlackLine_a,bを作るのも検討すべき 
+/*******************************************
+ * pro5 / BlackLine : 時間指定で後退・回転・前進し、元のモードへ戻る。
+ * 各段階はdelayを使わず、経過時間で切り替える。
  ******************************************/
-
-static const int BLACKLINE_SPEED       = 200;
-static const int BLACKLINE_BACK_MS     = 100;   //後退
-static const int BLACKLINE_TURN_MIN_MS = 750;   //回転(ランダムな角度)
+static const int BLACKLINE_SPEED = 200;
+static const unsigned long BLACKLINE_BACK_MS = 100;
+static const int BLACKLINE_TURN_MIN_MS = 750;
 static const int BLACKLINE_TURN_MAX_MS = 1050;
-static const int BLACKLINE_FORWARD_MS  = 200;   //復帰のために少し前進
+static const unsigned long BLACKLINE_FORWARD_MS = 200;
 
 class Pro5 : public ModeClass
 {
+private:
+  unsigned long turnTime = 0;
+  Mode resumeMode = Mode::Forward;
+
 public:
   Pro5(){
     this->myMode = Mode::BlackLine;
@@ -153,102 +155,21 @@ public:
 
   void whenChanged() override{
     MySerial.println("pro5");
+    resumeMode = MM.getModePrev();
+    turnTime = random(BLACKLINE_TURN_MIN_MS, BLACKLINE_TURN_MAX_MS);
   }
 
-  void execute(long startTime , long nowTime) override{
-    motors.setSpeeds(-BLACKLINE_SPEED, -BLACKLINE_SPEED);
-    delay(BLACKLINE_BACK_MS);
-
-    motors.setSpeeds(BLACKLINE_SPEED, -BLACKLINE_SPEED);
-    delay(random(BLACKLINE_TURN_MIN_MS, BLACKLINE_TURN_MAX_MS));
-
-    motors.setSpeeds(BLACKLINE_SPEED, BLACKLINE_SPEED);
-    delay(BLACKLINE_FORWARD_MS);
-
-    MM.changeMode(MM.getModePrev());  //フィールドに復帰 = 黒線を踏む前のモードに戻る
-  }
-};
-
-/* ================================================================
- * pro11 / CompassCalib : スタート位置での向きから、自ゴールがどちら側かを判定
- * スタート位置に置いてボタンを押す
- *   → 0.1sごとに3回、向きを取る
- *   → 同じ側(北 or 南)が2回以上 : 記憶して成功を出力し、Forwardへ進む
- *   → それ以外(東西など)       : このモードのまま成功するまでループ
- *補足 最適化されてない、ほんとはここにあるべきコードじゃないはず
- * ================================================================ */
-
-static const float COMPASS_NS_TOLERANCE_DEG = 20.0;  //南北とみなす許容角(±)
-static const int   COMPASS_SAMPLES          = 3;     //向きを取る回数
-static const int   COMPASS_SAMPLE_MS        = 100;   //その間隔
-static const int   COMPASS_NEED_SAME        = 2;     //同じ側がこの回数以上なら採用
-
-class Pro11 : public ModeClass
-{
-private:
-  /* 1回分の向き(0〜360°)を 北/南/それ以外 に分類する */
-  Side classify(float heading){
-    if (heading <= COMPASS_NS_TOLERANCE_DEG || heading >= 360.0 - COMPASS_NS_TOLERANCE_DEG){
-      return Side::North;
-    }
-    if (heading >= 180.0 - COMPASS_NS_TOLERANCE_DEG && heading <= 180.0 + COMPASS_NS_TOLERANCE_DEG){
-      return Side::South;
-    }
-    return Side::Unknown;
-  }
-
-  /* 0.1sごとに3回向きを取って判定する. 判定できなければUnknown */
-  Side judge(){
-    int north = 0;
-    int south = 0;
-
-    for (int i = 0; i < COMPASS_SAMPLES; i++){
-      float heading = readHeading();
-      Side side = classify(heading);
-      MySerial.println("pro11");
-
-      if (side == Side::North) north++;
-      if (side == Side::South) south++;
-
-      if (i < COMPASS_SAMPLES - 1){
-        delay(COMPASS_SAMPLE_MS);
-      }
-    }
-
-    if (north >= COMPASS_NEED_SAME) return Side::North;
-    if (south >= COMPASS_NEED_SAME) return Side::South;
-    return Side::Unknown;
-  }
-
-public:
-  Pro11(){
-    this->myMode = Mode::CompassCalib;
-    MM.set(this);
-  }
-
-  void whenChanged() override{
-    MySerial.println(F("スタート位置にロボットを置き、ボタンを押してください"));
-  }
-
-  void execute(long startTime , long nowTime) override{
-    if (!button.getSingleDebouncedPress()){
-      return;
-    }
-
-    Side side = judge();
-
-    if (side == Side::Unknown){
-      MySerial.println(F("東西向き(または判定不能)でした。向きを直して、もう一度ボタンを押してください"));
-      return;
-    }
-
-    //startSide = side;
-    if (side == Side::North){
-      MySerial.println(F("成功: スタート位置での向きを記憶しました (北)"));
+  void execute(long startTime, long nowTime) override{
+    unsigned long time = (unsigned long)nowTime - (unsigned long)startTime;
+    if (time < BLACKLINE_BACK_MS){
+      motors.setSpeeds(-BLACKLINE_SPEED, -BLACKLINE_SPEED);
+    }else if (time < BLACKLINE_BACK_MS + turnTime){
+      motors.setSpeeds(BLACKLINE_SPEED, -BLACKLINE_SPEED);
+    }else if (time < BLACKLINE_BACK_MS + turnTime + BLACKLINE_FORWARD_MS){
+      motors.setSpeeds(BLACKLINE_SPEED, BLACKLINE_SPEED);
     }else{
-      MySerial.println(F("成功: スタート位置での向きを記憶しました (南)"));
+      motors.setSpeeds(0, 0);
+      MM.changeMode(resumeMode);
     }
-
-    MM.changeMode(Mode::Forward);
   }
 };

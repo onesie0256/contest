@@ -43,7 +43,6 @@ void setup()
   noTone(3);
 
   setupCompass();
-  calibrationCompass();
 
   pinMode(13,OUTPUT);
 }

@@ -63,14 +63,21 @@ void ModeManager::changeMode(Mode next)
     return;
   }
 
-  
+  if (next == this->modeNow){
+    return;
+  }
 
   this->modePrev = this->modeNow;
   this->modeNow  = next;
   this->wasModeChanged = true;
 }
 
-Mode ModeManager::getModePrev() //割り込み処理の後に元に戻る関数の追加、不要であれば削除してください
+Mode ModeManager::getModeNow() const
+{
+  return this->modeNow;
+}
+
+Mode ModeManager::getModePrev() //遷移時に上書きされるので、割り込み先のwhenChanged()で保存する
 {
   return this->modePrev;
 }

@@ -17,7 +17,6 @@ const char* debugModeName(Mode mode)
     case Mode::Climb:       return "Climb";
     case Mode::Peak:        return "Peak";
     case Mode::Descent:     return "Descent";
-    case Mode::CompassCalib:return "CompassCalib";
     case Mode::BlackLine:   return "BlackLine";
     case Mode::Avoid:       return "Avoid";
     case Mode::Reset:       return "Reset";

@@ -7,7 +7,12 @@
 
 LSM303 compass;
 
-const int BLACK_TH = 50;
+Side startSide = Side::Unknown;
+
+static const float COMPASS_NS_TOLERANCE_DEG = 20.0;
+static const int COMPASS_SAMPLES = 3;
+static const int COMPASS_SAMPLE_MS = 100;
+static const int COMPASS_NEED_SAME = 2;
 
 int norm(float v, float vmin, float vmax)
 {
@@ -20,12 +25,25 @@ int norm(float v, float vmin, float vmax)
 }
 
 
+// 任意の角度を0以上360未満にそろえる。
+float normalizeHeading(float heading)
+{
+  float normalized = fmod(heading, 360.0f);
+  return normalized < 0.0f ? normalized + 360.0f : normalized;
+}
+
 float readHeading()
 {
   compass.read();
 
-  float x_scaled = 2.0 * (float)(compass.m.x - compass.m_min.x) / (compass.m_max.x - compass.m_min.x) - 1.0;
-  float y_scaled = 2.0 * (float)(compass.m.y - compass.m_min.y) / (compass.m_max.y - compass.m_min.y) - 1.0;
+  float x_span = (float)compass.m_max.x - compass.m_min.x;
+  float y_span = (float)compass.m_max.y - compass.m_min.y;
+  if (x_span <= 0.0f || y_span <= 0.0f){
+    return NAN;
+  }
+
+  float x_scaled = 2.0 * ((float)compass.m.x - compass.m_min.x) / x_span - 1.0;
+  float y_scaled = 2.0 * ((float)compass.m.y - compass.m_min.y) / y_span - 1.0;
 
   float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
   if (angle < 0)
@@ -42,6 +60,8 @@ void setupCompass()
   compass.writeReg(LSM303::CRB_REG_M, CRB_REG_M_2_5GAUSS);
   compass.writeReg(LSM303::CRA_REG_M, CRA_REG_M_220HZ);
   delay(1000);
+  calibrationCompass();
+  calibrationStartSide();
 }
 
 void calibrationCompass()
@@ -80,10 +100,68 @@ void calibrationCompass()
   compass.m_min.z = running_min.z;
 }
 
+// スタート位置での向きから自陣側を記憶する（旧Pro11）。
+Side classifyStartSide(float heading)
+{
+  if (!isfinite(heading)){
+    return Side::Unknown;
+  }
+  heading = normalizeHeading(heading);
+  if (heading <= COMPASS_NS_TOLERANCE_DEG || heading >= 360.0f - COMPASS_NS_TOLERANCE_DEG){
+    return Side::North;
+  }
+  if (fabs(heading - 180.0f) <= COMPASS_NS_TOLERANCE_DEG){
+    return Side::South;
+  }
+  return Side::Unknown;
+}
+
+Side judgeStartSide()
+{
+  int north = 0;
+  int south = 0;
+  for (int i = 0; i < COMPASS_SAMPLES; i++){
+    Side side = classifyStartSide(readHeading());
+    if (side == Side::North) north++;
+    if (side == Side::South) south++;
+    if (i < COMPASS_SAMPLES - 1){
+      delay(COMPASS_SAMPLE_MS);
+    }
+  }
+  if (north >= COMPASS_NEED_SAME) return Side::North;
+  if (south >= COMPASS_NEED_SAME) return Side::South;
+  return Side::Unknown;
+}
+
+void calibrationStartSide()
+{
+  motors.setSpeeds(0, 0);
+  startSide = Side::Unknown;
+  while (startSide == Side::Unknown){
+    MySerial.println(F("スタート位置にロボットを置き、ボタンを押してください"));
+    button.waitForButton();
+    startSide = judgeStartSide();
+    if (startSide == Side::Unknown){
+      MySerial.println(F("東西向き(または判定不能)でした。向きを直して、もう一度ボタンを押してください"));
+    }
+  }
+  if (startSide == Side::North){
+    MySerial.println(F("成功: スタート位置での向きを記憶しました (北)"));
+  }else{
+    MySerial.println(F("成功: スタート位置での向きを記憶しました (南)"));
+  }
+}
+
 void checkBlackLine()
 {
-  if (mode_G != Mode::Forward){
-    return;
+  // mode_GはMM.play()後に更新されるため、遷移直後も正しい現在値で判定する。
+  switch (MM.getModeNow()){
+    case Mode::Forward:
+    case Mode::Avoid:
+    case Mode::FindMount:
+      break;
+    default:
+      return; //Returnは帰陣用の黒線処理を使う。
   }
 
   if (color_G == (uint8_t)Color::Black){
