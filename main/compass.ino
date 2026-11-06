@@ -100,7 +100,7 @@ void calibrationCompass()
   compass.m_min.z = running_min.z;
 }
 
-// スタート位置での向きから自陣側を記憶する（旧Pro11）。
+// スタート位置での向きから自陣側を記憶する（最終的に逆向きを返すことで自分のゴールがどちら側か正しく判定するようにしている）。
 Side classifyStartSide(float heading)
 {
   if (!isfinite(heading)){
@@ -132,8 +132,8 @@ Side judgeStartSide()
       delay(COMPASS_SAMPLE_MS);
     }
   }
-  if (north >= COMPASS_NEED_SAME) return Side::North;
-  if (south >= COMPASS_NEED_SAME) return Side::South;
+  if (north >= COMPASS_NEED_SAME) return Side::South;
+  if (south >= COMPASS_NEED_SAME) return Side::North;
   return Side::Unknown;
 }
 
