@@ -52,7 +52,6 @@ float readHeading()
   return angle;
 }
 
-
 void setupCompass()
 {
   Wire.begin();

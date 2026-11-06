@@ -93,7 +93,7 @@ class ModeManager
 {
 private:
   std::map<Mode , ModeClass*> modeMap{};  //モードクラスの集合
-  Mode modeNow = Mode::FindMount;           //現在のモード
+  Mode modeNow = Mode::Mode0_A;           //現在のモード
   Mode modePrev = Mode::Mode0_A;          //1つ前のモード
   bool wasModeChanged = false;            //モードの変更に使用するフラグ
   bool modeChangeProtect = false;

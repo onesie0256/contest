@@ -4,6 +4,7 @@
 #include <Pushbutton.h>
 #include "head.hpp"
 #include "TestClass.hpp"
+#include "MountClass.hpp"
 #include "PacketType.h"
 #include "ResetClass.hpp"
 
@@ -26,9 +27,9 @@ A a;
 Reset r;
 FindMount fm;
 Climb c;
-// Pro1 pro1;
+Pro1 pro1;
 // Pro4 pro4;
-// Pro5 pro5;
+Pro5 pro5;
 
 
 void setup()
@@ -42,17 +43,17 @@ void setup()
   fm = FindMount();
   c = Climb();
 
-  // button.waitForButton(); 
-  // auto_calib();
-  // tone(3,220);
-  // delay(500);
-  // noTone(3);
+  button.waitForButton(); 
+  auto_calib();
+  tone(3,220);
+  delay(200);
+  noTone(3);
 
   button.waitForButton(); 
   setupCompass();
   calibrationCompass();
   tone(3,220);
-  delay(500);
+  delay(200);
   noTone(3);
 
   setupCompass();
@@ -63,13 +64,13 @@ void setup()
 void loop()
 {
   getColor();
-  averageHeadingLP();
   color_G = (uint8_t)Nearest_Neighbor(); 
-   if (button.isPressed() == true) { //ユーザボタンが押されている間は後転
-      // digitalWrite(13,HIGH);
-      // delay(1000);
-      // digitalWrite(13,LOW); 
-    MM.changeModeForce(Mode::Reset); 
+  if (button.getSingleDebouncedPress()) {
+    if (MM.getModeNow() == Mode::Mode0_A) {
+      MM.changeMode(Mode::Forward);
+    } else {
+      MM.changeModeForce(Mode::Reset);
+    }
   }
 
   checkBlackLine();

@@ -31,10 +31,8 @@ public:
     // MySerial.print(" ");
     // MySerial.println(nowTime);
 
-    // if (nowTime - startTime >= 5000){
-    //   //noTone(3);
-    //   MM.changeMode(Mode::Forward);
-    // }
+    // 初期状態では停止し、loop()でユーザボタンによる開始を待つ。
+    motors.setSpeeds(0, 0);
   }
 };
  
