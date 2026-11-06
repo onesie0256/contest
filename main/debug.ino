@@ -1,6 +1,17 @@
 
 #include "head.hpp"
 
+// false: XBee受信側のシリアルモニタへ、そのまま読める文字列を送る。
+// true : Processing向けの既存パケット形式（sendString）で送る。
+// 受信側のシリアルモニタはXBeeの通信速度に合わせる（現在9600bps）。
+static const bool DEBUG_USE_PROCESSING_PACKETS = false;
+
+// デバッグ項目を追加するときは debugMessage("確認したい内容"); を使う。
+// 数値を含む場合の例:
+// String message = "distance=" + String(distance_G);
+// debugMessage(message.c_str());
+// 既存のSerial1/MySerial出力は各ファイルに残しているため、必要に応じて整理する。
+
 // モード番号を文字列へ変換
 const char* debugModeName(Mode mode)
 {
@@ -44,6 +55,13 @@ const char* debugColorName(Color color)
 // XBee通信で文字列を送る
 void debugMessage(const char* message)
 {
+  // XBee経由でPCへ送信する。USBのSerialへの出力は行わない。
+  // シリアルモニタではパケットのヘッダを付けず、1メッセージ1行で表示する。
+  if (!DEBUG_USE_PROCESSING_PACKETS) {
+    MySerial.println(message);
+    return;
+  }
+
   String text = String(message);
   text += '\n';
   sendString(text);
@@ -96,6 +114,18 @@ void debugStatus()
 
   msg += " heading=";
   msg += String(readHeading(), 1);
+
+  // mode_Gと管理中のモードの食い違い（未登録モードなど）を確認する。
+  msg += " managerMode=";
+  msg += debugModeName(MM.getModeNow());
+
+  // 校正で記憶した自陣側を確認する。不要ならこのブロックをコメントアウトする。
+  msg += " startSide=";
+  switch (startSide) {
+    case Side::North: msg += "North"; break;
+    case Side::South: msg += "South"; break;
+    default:          msg += "Unknown"; break;
+  }
 
   debugMessage(msg.c_str());
 }
