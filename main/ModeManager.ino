@@ -33,7 +33,6 @@ Mode ModeManager::play()
   ModeClass *mc = result->second;
 
   if (this->wasModeChanged){
-    MySerial.println("change!");
     mc->whenChanged();
     startTime = millis();
     this->wasModeChanged = false;
@@ -63,7 +62,6 @@ void ModeManager::changeMode(Mode next)
     return;
   }
 
-  
 
   this->modePrev = this->modeNow;
   this->modeNow  = next;

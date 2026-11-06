@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <LSM303.h>
+#include <math.h>
 
 #define CALIBRATION_SAMPLES 50  // 地磁気キャリブレーション時のサンプル取得回数
 #define CRB_REG_M_2_5GAUSS 0x60 // ±2.5ガウス設定
@@ -28,8 +29,8 @@ float readHeading()
   float y_scaled = 2.0 * (float)(compass.m.y - compass.m_min.y) / (compass.m_max.y - compass.m_min.y) - 1.0;
 
   float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
-  if (angle < 0)
-    angle += 360;
+  if (angle < -90)
+    angle += 270;
   return angle;
 }
 
@@ -89,4 +90,48 @@ void checkBlackLine()
   if (color_G == (uint8_t)Color::Black){
     MM.changeMode(Mode::BlackLine);
   }
+}
+
+template <typename T> 
+int heading(LSM303::vector<T> v)
+{
+  float x_scaled =  2.0 * (float)(v.x - compass.m_min.x) / ( compass.m_max.x - compass.m_min.x) - 1.0;
+  float y_scaled =  2.0 * (float)(v.y - compass.m_min.y) / (compass.m_max.y - compass.m_min.y) - 1.0;
+
+  float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
+  angle -= 90;
+  if (angle < -180)
+    angle += 360;
+  return (int)angle;
+}
+
+float averageHeadingLP()
+{
+  static LSM303::vector<int32_t> avg_g = {
+    0, 0, 0
+  };
+
+  static LSM303::vector<int32_t> avg_a = {
+    0, 0, 0
+  };
+
+  compass.read();
+  avg_g.x = 0.2 * compass.m.x + 0.8 * avg_g.x;
+  avg_g.y = 0.2 * compass.m.y + 0.8 * avg_g.y;
+
+  avg_a.x = 0.2 * compass.a.x + 0.8 * avg_a.x;
+  avg_a.y = 0.2 * compass.a.y + 0.8 * avg_a.y;
+  avg_a.z = 0.2 * compass.a.z + 0.8 * avg_a.z;
+
+  uint16_t yaw = heading(avg_g);
+  yaw_G = yaw;
+
+  pitch_G = atan2f((float)avg_a.x , (float)avg_a.z) * 180 / M_PI;
+  roll_G = atan2f((float)avg_a.y , (float)avg_a.z) * 180 / M_PI;
+
+  angle_G = sqrt((pitch_G*pitch_G)+(roll_G*roll_G));
+
+
+  // avg is the average measure of the magnetic vector.
+  return (float)yaw;
 }

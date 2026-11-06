@@ -46,9 +46,9 @@ bool receive()
             return false;
         }
         wasReceived = true;
-        // digitalWrite(13,HIGH);
-        // delay(1000);
-        // digitalWrite(13,LOW);
+        digitalWrite(13,HIGH);
+        delay(10);
+        digitalWrite(13,LOW);
         PacketType type = (PacketType)MySerial.read();
         switch (type) {
             case PacketType::Data: {
