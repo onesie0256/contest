@@ -9,6 +9,7 @@
 #include "MountClass.hpp"
 
 /* _Gが付いてるこれらの変数の内容がprocessingに送られる! */
+uint16_t angle_G = 0;
 Mode mode_G = Mode::Mode0_A;
 uint8_t r_G = 0;
 uint8_t g_G = 0;
@@ -19,13 +20,15 @@ int16_t pitch_G = 0;
 int16_t roll_G = 0;
 int16_t yaw_G = 0;
 uint8_t isStacking_G = 0;
-uint16_t angle_G = 0;
+
 
 
 A a;
 Reset r;
 FindMount fm;
 Climb c;
+Peak peak;
+Descent descent;
 // Pro1 pro1;
 // Pro4 pro4;
 // Pro5 pro5;
@@ -41,12 +44,14 @@ void setup()
   r = Reset();
   fm = FindMount();
   c = Climb();
+  peak = Peak();
+  descent = Descent();
 
-  // button.waitForButton(); 
-  // auto_calib();
-  // tone(3,220);
-  // delay(500);
-  // noTone(3);
+  button.waitForButton(); 
+  auto_calib();
+  tone(3,220);
+  delay(500);
+  noTone(3);
 
   button.waitForButton(); 
   setupCompass();
@@ -56,6 +61,7 @@ void setup()
   noTone(3);
 
   pinMode(13,OUTPUT);
+  button.waitForButton();
 }
 
 void loop()
@@ -73,5 +79,5 @@ void loop()
   checkBlackLine();
   mode_G = MM.play();
   receive();
-  delay(50);
+  delay(10);
 }

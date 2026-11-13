@@ -29,8 +29,8 @@ float readHeading()
   float y_scaled = 2.0 * (float)(compass.m.y - compass.m_min.y) / (compass.m_max.y - compass.m_min.y) - 1.0;
 
   float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
-  if (angle < -90)
-    angle += 270;
+  if (angle < 0)
+    angle += 360;
   return angle;
 }
 
@@ -100,7 +100,7 @@ int heading(LSM303::vector<T> v)
 
   float angle = atan2(y_scaled, x_scaled) * 180 / M_PI;
   angle -= 90;
-  if (angle < -180)
+  if (angle < 0)
     angle += 360;
   return (int)angle;
 }

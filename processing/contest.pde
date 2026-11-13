@@ -20,9 +20,17 @@ String lookup(String[] table, int index) {
   return table[index];
 }
 
+final int[] origin_x  = {0 , 600 , 0};
+final int[] origin_y = {0 , 300 , 300};
+final int _w = 600;
+final int _h = 300;
+
 Serial port;
-int mode;
-int green, red, blue, green_p, red_p, blue_p;
+int[] mode = {0,0,0};
+int green, red, blue;
+int[] green_p = {0,0,0};
+int[] red_p = {0,0,0};
+int[] blue_p = {0,0,0};
 boolean sof_f = false; // SoF(Start of flame) を発見したかどうかのフラグ
 int time = 0;
 final int timeOut = 5000;
@@ -30,63 +38,71 @@ final byte target = 37;
 int packet = 0;
 int recentAddress = 0;
 
-int color_p = 0;
-int distance_p = 0;
-int pitch_p = 0;
-int roll_p = 0;
-int yaw_p = 0;
-int isStacking_p = 0;
+int[] color_p = {0,0,0};
+int[] distance_p = {0,0,0};
+int[] pitch_p = {0,0,0};
+int[] roll_p = {0,0,0};
+int[] yaw_p = {0,0,0};
+int[] isStacking_p = {0,0,0};
 
 void setup() {
-  size(1200, 400);
+  size(1200, 600);
   background(255);
   //println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  port = new Serial(this, "com8", 115200 ); // シリアルポート名は各自の環境に合わせて適宜指定
-  red_p = 0;
-  green_p = 0;
-  blue_p = 0;
+  port = new Serial(this, "com6", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
   
   send_request();
   time = millis();
 }
 
 void draw() {
-  red_p = red;
-  green_p = green;
-  blue_p = blue;
-  
-  background(red_p,green_p,blue_p);
+  background(255);
   stroke(0);
   fill(255);
-  rect(0, height-200, 350, 200);
-  textSize(50);
-  fill(0);
-  text("mode=", 20, height-10); text(lookup(modeToStr, mode), 200, height-10);
-  String rgbText = "R:"+str(red_p)+"G:"+str(green_p)+"B:"+str(blue_p);
-  text(rgbText, 20, height-60);
-  noFill();
-  textSize(20);
-  text("color: "+lookup(colorToStr, color_p), 20, height-180);
-  text("distance: "+str(distance_p)+" cm", 20, height-160);
-  //text("color: "+str(color_p), 20, height-180);
-  text("pitch: "+str(pitch_p)+"°  roll: "+str(roll_p)+"°  yaw: "+str(yaw_p)+"°", 20, height-140);
-  if (isStacking_p == 1){
-    fill(255,0,0);
-    text("stacking!!!", 20, height-120);
-    fill(0);
-  }
-  else {
-    text("not stacking", 20, height-120);
-  }
   
+  drawWindow(0 , 0 , 37);
+  drawWindow(600 , 0 , 38);
+  drawWindow(0 , 300 , 39);
   
   if (millis() - time >= timeOut){
     send_request();
     println("リクエスト再送信");
     time = millis();
   }
+}
+
+void drawWindow(int x , int y , int address)
+{
+  int idx = address - 37;
+  int w = x + _w;
+  int h = y + _h;
+  noFill();
+  rect(x, y, 600, 300);
+  rect(w-250, y, 250, 250);
+  textSize(50);
+  fill(0);
+  text("Num.", x+20, y+40); text(str(address), x+150, y+40);
+  text("mode: ", 20+x, h-10); text(lookup(modeToStr, mode[idx]), x+170, h-10);
+  String rgbText = "R:"+str(red_p[idx])+"G:"+str(green_p[idx])+"B:"+str(blue_p[idx]);
+  text(rgbText, 20+x, h-60);
+  noFill();
+  textSize(20);
+  text("color: "+lookup(colorToStr, color_p[idx]), 20+x, h-180);
+  text("distance: "+str(distance_p[idx])+" cm", x+20, h-160);
+  //text("color: "+str(color_p), 20, height-180);
+  text("pitch: "+str(pitch_p[idx])+"°  roll: "+str(roll_p[idx])+"°  yaw: "+str(yaw_p[idx])+"°", 20+x, h-140);
+  if (isStacking_p[idx] == 1){
+    fill(255,0,0);
+    text("stacking!!!", 20+x, h-120);
+    fill(0);
+  }
+  else {
+    text("not stacking", 20+x, h-120);
+  }
+  fill(red_p[idx],green_p[idx],blue_p[idx]);
+  rect(w-250-100, y, 100, 100);
 }
 
 void keyPressed() { // keyが押されると呼ばれる関数
@@ -98,22 +114,24 @@ void keyPressed() { // keyが押されると呼ばれる関数
   }
 }
 
-int receiveData(Serial p)
+int receiveData(Serial p , int address)
 {
-  if (p.available() < 13){
-    return 0;
-  }
+  //if (p.available() < 13){
+  //  return 0;
+  //}
+  
+  int idx = address - 37;
  
-  mode =  p.read();
-  red =  p.read();
-  green = p.read();
-  blue =  p.read();
-  color_p = p.read();
-  distance_p = p.read();
-  pitch_p = read2byte(p);
-  roll_p = read2byte(p);
-  yaw_p = read2byte(p);
-  isStacking_p = p.read();
+  mode[idx] =  p.read();
+  red_p[idx] =  p.read();
+  green_p[idx] = p.read();
+  blue_p[idx] =  p.read();
+  color_p[idx] = p.read();
+  distance_p[idx] = p.read();
+  pitch_p[idx] = cnv(read2byte(p));
+  roll_p[idx] = cnv(read2byte(p));
+  yaw_p[idx] = cnv(read2byte(p));
+  isStacking_p[idx] = p.read();
 
   print(" RGB = ");
   println(red, green, blue);
@@ -127,6 +145,8 @@ int receiveData(Serial p)
   println(isStacking_p);
   return 13;
 }
+
+
 
 int receiveStr(Serial p)
 {
@@ -154,21 +174,24 @@ void serialEvent(Serial p) {
       l--; // 受信バッファのデータ数の修正
     }
     if (sof_f == true) { // SoFを発見している場合
-      if (l >= basicLen) { // 受信バッファのデータ数がヘッダ長以上
+      if (l >= 15) { // 受信バッファのデータ数がヘッダ長以上
         recentAddress = p.read();
         packet = p.read();
+        println(l);
+        println(recentAddress);
+        receiveData(p,recentAddress);
         
-        switch (packet){
-          case 1:
-          l -= receiveData(p);
-          break;
-          default:
-          break;
-        }
+        //switch (packet){
+        //  case 1:
+        //  l -= receiveData(p);
+        //  break;
+        //  default:
+        //  break;
+        //}
 
         bod_f = true; // 1組のデータを読み込んだ
         sof_f = false; // 1組のデータを読み取ったのでSoFの発見をクリア
-        l -= basicLen; // 受信バッファのデータ数の修正
+        l -= 15; // 受信バッファのデータ数の修正
         time = millis();
       } else { // 受信バッファのデータ数不足の場合
         break; // whileループを中断
@@ -197,4 +220,12 @@ int read2byte(Serial p){
   
   //2つのビット列を連結して返す
   return (high << 8 ) + low;
+}
+
+int cnv(int x)
+{
+  if (x >= 32768){
+    return x-65535; 
+  }
+  return x;
 }
