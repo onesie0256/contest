@@ -43,7 +43,7 @@ void setup() {
   //println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  port = new Serial(this, "com8", 115200 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  port = new Serial(this, "/dev/ttyUSB0", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
   red_p = 0;
   green_p = 0;
   blue_p = 0;
@@ -100,9 +100,9 @@ void keyPressed() { // keyが押されると呼ばれる関数
 
 int receiveData(Serial p)
 {
-  if (p.available() < 13){
-    return 0;
-  }
+  //if (p.available() < 13){
+  //  return 0;
+  //}
  
   mode =  p.read();
   red =  p.read();
@@ -154,7 +154,7 @@ void serialEvent(Serial p) {
       l--; // 受信バッファのデータ数の修正
     }
     if (sof_f == true) { // SoFを発見している場合
-      if (l >= basicLen) { // 受信バッファのデータ数がヘッダ長以上
+      if (l >= 13) { // 受信バッファのデータ数がヘッダ長以上
         recentAddress = p.read();
         packet = p.read();
         

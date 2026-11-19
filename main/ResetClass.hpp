@@ -12,7 +12,6 @@ public:
   }
 
   void whenChanged() override{
-    motors.setSpeeds(0, 0);
     tone(3,600);
   }
 

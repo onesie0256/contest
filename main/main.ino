@@ -3,11 +3,11 @@
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
 #include "head.hpp"
+#include "Ultrasonic.hpp" 
 #include "TestClass.hpp"
-#include "MountClass.hpp"
 #include "PacketType.h"
 #include "ResetClass.hpp"
-
+#include "MountClass.hpp"
 
 /* _Gが付いてるこれらの変数の内容がprocessingに送られる! */
 Mode mode_G = Mode::Mode0_A;
@@ -27,9 +27,13 @@ A a;
 Reset r;
 FindMount fm;
 Climb c;
-Pro1 pro1;
-// Pro4 pro4;
-Pro5 pro5;
+ Pro1 pro1;
+ Pro2 pro2;
+ Pro3 pro3;
+ Pro4 pro4;
+ Pro5 pro5;
+ Pro6 pro6;
+ Pro7 pro7;
 
 
 void setup()
@@ -38,21 +42,26 @@ void setup()
   while (!MySerial){
     delay(1);
   }
-  a = A();
-  r = Reset();
-  fm = FindMount();
-  c = Climb();
+   pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  digitalWrite(trig, LOW);
+
+  // a = A();
+  // r = Reset();
+  // fm = FindMount();
+  // c = Climb();
 
   button.waitForButton(); 
   auto_calib();
   tone(3,220);
-  delay(200);
+  delay(500);
   noTone(3);
 
   button.waitForButton(); 
   setupCompass();
+  calibrationCompass();
   tone(3,220);
-  delay(200);
+  delay(500);
   noTone(3);
 
   pinMode(13,OUTPUT);
@@ -61,18 +70,28 @@ void setup()
 void loop()
 {
   getColor();
-  color_G = (uint8_t)Nearest_Neighbor(); 
+  averageHeadingLP();
+
+  color_G = (uint8_t)Nearest_Neighbor();
+
+  // ボタンが押されたとき
   if (button.getSingleDebouncedPress()) {
-    if (MM.getModeNow() == Mode::Mode0_A) {
-      MM.changeMode(Mode::Forward);
-    } else {
+
+    // Mode0_AならForwardへ
+    if (mode_G == Mode::Mode0_A) {
+      MM.changeModeForce(Mode::Forward);
+    }
+    // Mode0_A以外ならResetへ
+    else {
       MM.changeModeForce(Mode::Reset);
     }
   }
 
   checkBlackLine();
+
   mode_G = MM.play();
+
   receive();
-  debugStatus();
+
   delay(50);
 }
