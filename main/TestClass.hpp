@@ -94,24 +94,39 @@ public:
 
 };
 
+
 /*******************************************
  * Pro2 / Judge : ロボットとコップの判定
  *
- * 1秒停止後、3秒間距離を測定
- * ロボット → Pro6
- * コップ   → Pro3
+ * 1秒間停止
+ * 最初の5回の距離の平均を基準にする
+ * 基準から5cm以上変化した状態が3回続く
+ *   → ロボットと判定してRotateへ
+ * 3秒間移動が確認されない
+ *   → コップと判定してObtainへ
  ******************************************/
 
 static const int JUDGE_WAIT_MS = 1000;
 static const int JUDGE_MEASURE_MS = 3000;
-static const int JUDGE_MOVE_THRESHOLD = 1;
+
+static const int JUDGE_SAMPLE_INTERVAL = 100;
+static const int JUDGE_BASELINE_SAMPLES = 5;
+static const int JUDGE_MOVE_THRESHOLD = 5;
+static const int JUDGE_MOVE_CONFIRM_COUNT = 3;
 
 class Pro2 : public ModeClass
 {
 private:
   bool measuring = false;
-  int previousDist = -1;
+
   long measureStartTime = 0;
+  long lastSampleTime = 0;
+
+  int baselineSum = 0;
+  int baselineCount = 0;
+  int baselineDist = -1;
+
+  int movedCount = 0;
 
 public:
 
@@ -123,18 +138,22 @@ public:
   void whenChanged() override{
 
     measuring = false;
-    previousDist = -1;
+
+    baselineSum = 0;
+    baselineCount = 0;
+    baselineDist = -1;
+
+    movedCount = 0;
 
     motors.setSpeeds(0, 0);
 
-    MySerial.println("pro2 Judge Start");
+    MySerial.println("Judge Start");
   }
 
   void execute(long startTime, long nowTime) override{
 
+    // Judge中は常に停止
     motors.setSpeeds(0, 0);
-
-    int dist = readUltrasonicDistance();
 
     // 最初の1秒間は停止
     if (!measuring){
@@ -143,7 +162,7 @@ public:
 
         measuring = true;
         measureStartTime = nowTime;
-        previousDist = dist;
+        lastSampleTime = nowTime;
 
         MySerial.println("Distance measurement start");
       }
@@ -151,36 +170,77 @@ public:
       return;
     }
 
-    // 距離の変化を確認
-    if (dist >= 0 && previousDist >= 0){
+    // 100msごとに測定
+    if (nowTime - lastSampleTime < JUDGE_SAMPLE_INTERVAL){
+      return;
+    }
 
-      if (abs(dist - previousDist) >= JUDGE_MOVE_THRESHOLD){
+    lastSampleTime = nowTime;
 
-        MySerial.println("Robot detected");
+    int dist = readUltrasonicDistance();
 
-        // ロボットと判定したらPro6へ
-        MM.changeMode(Mode::Rotate);
+    // 測定に失敗した場合は無視
+    if (dist < 0){
+      return;
+    }
 
-        return;
+    distance_G = constrain(dist, 0, 255);
+
+    // 最初の5回で基準距離を計算
+    if (baselineCount < JUDGE_BASELINE_SAMPLES){
+
+      baselineSum += dist;
+      baselineCount++;
+
+      if (baselineCount == JUDGE_BASELINE_SAMPLES){
+
+        baselineDist = baselineSum / JUDGE_BASELINE_SAMPLES;
+
+        MySerial.print("Baseline Distance: ");
+        MySerial.println(baselineDist);
       }
+
+      return;
     }
 
-    if (dist >= 0){
-      previousDist = dist;
+    // 基準距離から5cm以上変化したか確認
+    if (abs(dist - baselineDist) >= JUDGE_MOVE_THRESHOLD){
+
+      movedCount++;
+
+      MySerial.print("Movement candidate: ");
+      MySerial.println(movedCount);
+
+    } else {
+
+      // 元の距離に戻ったらカウントをリセット
+      movedCount = 0;
     }
 
-    // 3秒間変化がなければコップと判定
+    // 3回連続で変化した場合だけロボットと判定
+    if (movedCount >= JUDGE_MOVE_CONFIRM_COUNT){
+
+      MySerial.println("Robot detected");
+
+      motors.setSpeeds(0, 0);
+      MM.changeMode(Mode::Rotate);
+
+      return;
+    }
+
+    // 3秒間移動が確認されなければコップ
     if (nowTime - measureStartTime >= JUDGE_MEASURE_MS){
 
       MySerial.println("Cup detected");
 
-      // コップと判定したらPro3へ
+      motors.setSpeeds(0, 0);
       MM.changeMode(Mode::Obtain);
 
       return;
     }
   }
 };
+
 
 
 /*******************************************
@@ -336,6 +396,8 @@ static const int RETURN_LEFT_TURN_MS    = 1100;
 class Pro4 : public ModeClass
 {
 private:
+  // BlackLineからReturnに戻った直後の方向修正を1回だけ行う
+  bool handledBlackLineReturn = false;
 
   // Obtainから移行したときに自陣方向を向く
   void turnToHome(){
@@ -386,6 +448,7 @@ public:
   void whenChanged() override{
 
     motors.setSpeeds(0, 0);
+    handledBlackLineReturn = false;
 
     MySerial.println("Return Start");
 
@@ -407,12 +470,20 @@ public:
       return;
     }
 
-    // 黒線を踏んだら回避
-    if (c == Color::Black){
+    // // 黒線を踏んだら回避
+    // if (c == Color::Black){
 
+    //   motors.setSpeeds(0, 0);
+
+    //   avoidBlackFrame();
+    //   return;
+    // }
+
+    // BlackLineからReturnに戻った直後だけ、自陣方向への修正を行う
+    if (MM.getModePrev() == Mode::BlackLine && !handledBlackLineReturn){
+      handledBlackLineReturn = true;
       motors.setSpeeds(0, 0);
-
-      avoidBlackFrame();
+      turnToHome();
       return;
     }
 
@@ -420,6 +491,7 @@ public:
     motors.setSpeeds(RETURN_DRIVE_SPEED, RETURN_DRIVE_SPEED);
   }
 };
+
 
  /*******************************************
  *pro5 / BlackLine : 黒線を踏んだ時フィールドに復帰

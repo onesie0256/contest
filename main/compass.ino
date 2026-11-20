@@ -81,16 +81,36 @@ void calibrationCompass()
   compass.m_min.z = running_min.z;
 }
 
+
 void checkBlackLine()
 {
-  if (mode_G != Mode::Forward){
+  Mode currentMode = MM.getModeNow();
+
+  // 競技開始前やリセット中などは黒線検知による自動遷移を禁止する
+  // 黒線回避を有効にするのは競技動作中のモードだけ
+  if (currentMode != Mode::Forward &&
+      currentMode != Mode::Rotate &&
+      currentMode != Mode::Judge &&
+      currentMode != Mode::Obtain &&
+      currentMode != Mode::Return &&
+      currentMode != Mode::Resume){
     return;
   }
 
-  if (color_G == (uint8_t)Color::Black){
-    MM.changeMode(Mode::BlackLine);
+  // 黒線回避中は新たにモードを変更しない
+  if (currentMode == Mode::BlackLine){
+    return;
   }
+
+  // 黒色以外なら何もしない
+  if (color_G != (uint8_t)Color::Black){
+    return;
+  }
+
+  // 黒線を検知したら回避モードへ
+  MM.changeMode(Mode::BlackLine);
 }
+
 
 template <typename T> 
 int heading(LSM303::vector<T> v)
