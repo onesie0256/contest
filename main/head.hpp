@@ -62,6 +62,7 @@ enum class Side : uint8_t {
 extern Side startSide;
 
 /* _Gが付いてる変数の内容がprocessingに送られる! */
+extern uint16_t angle_G;
 extern Mode mode_G;
 extern uint8_t r_G;
 extern uint8_t g_G;
@@ -72,7 +73,6 @@ extern int16_t pitch_G;
 extern int16_t roll_G;
 extern int16_t yaw_G;
 extern uint8_t isStacking_G;
-extern uint16_t angle_G;
 
 class ModeClass;
 class ModeManager;
@@ -81,6 +81,8 @@ class B;
 class Reset;
 class FindMount;
 class Climb;
+class Peak;
+class Descent;
 
 Pushbutton button(ZUMO_BUTTON);
 ZumoMotors motors;

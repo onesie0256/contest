@@ -14,6 +14,7 @@ public:
   void whenChanged() override{
     motors.setSpeeds(0, 0);
     tone(3,600);
+    motors.setSpeeds(0, 0);
   }
 
   void execute(long startTime , long nowTime){
@@ -25,7 +26,15 @@ public:
 
     switch(color_G){
       case (uint8_t)(Color::Yellow) : {
-        MM.changeMode(Mode::Mode0_A); break;
+        MM.changeModeForce(Mode::Mode0_A);
+        // digitalWrite(13,HIGH);
+        // delay(1000);
+        // digitalWrite(13,LOW);
+        break;
+      }
+
+      case (uint8_t)(Color::Green) : {
+        MM.changeModeForce(Mode::FindMount);
         // digitalWrite(13,HIGH);
         // delay(1000);
         // digitalWrite(13,LOW);

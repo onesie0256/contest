@@ -9,9 +9,9 @@ static void _send(void* data, size_t size) {
 void send(void* data, PacketType type, size_t size) {
     uint8_t myAdress = (uint8_t)MyAdress;
     MySerial.write('H');
-    _send(&myAdress, sizeof(myAdress));
-    _send(&type, sizeof(type));
-    _send(data, size);
+    _send(&myAdress, 1);
+    _send(&type, 1);
+    _send(data, 13);
 }
 
 void sendString(String str) {
@@ -22,6 +22,7 @@ void sendData() {
     uint8_t data[13] = { (uint8_t)mode_G, r_G, g_G, b_G, color_G, distance_G,
           (uint8_t)(pitch_G >> 8), (uint8_t)pitch_G, (uint8_t)(roll_G >> 8),
         (uint8_t)roll_G, (uint8_t)(yaw_G >> 8), (uint8_t)yaw_G, isStacking_G };
+
     send((void*)data, PacketType::Data, sizeof(data));
 }
 
@@ -46,9 +47,6 @@ bool receive()
             return false;
         }
         wasReceived = true;
-        digitalWrite(13,HIGH);
-        delay(10);
-        digitalWrite(13,LOW);
         PacketType type = (PacketType)MySerial.read();
         switch (type) {
             case PacketType::Data: {
