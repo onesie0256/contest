@@ -22,8 +22,8 @@ String lookup(String[] table, int index) {
 
 final int[] origin_x  = {0 , 600 , 0};
 final int[] origin_y = {0 , 300 , 300};
-final int _w = 600;
-final int _h = 300;
+final int _w = 1200;
+final int _h = 600;
 
 Serial port;
 int[] mode = {0,0,0};
@@ -33,7 +33,7 @@ int[] red_p = {0,0,0};
 int[] blue_p = {0,0,0};
 boolean sof_f = false; // SoF(Start of flame) を発見したかどうかのフラグ
 int time = 0;
-final int timeOut = 5000;
+final int timeOut = 1000;
 final byte target = 37;
 int packet = 0;
 int recentAddress = 0;
@@ -46,12 +46,12 @@ int[] yaw_p = {0,0,0};
 int[] isStacking_p = {0,0,0};
 
 void setup() {
-  size(1200, 600);
+  size(1200, 600 , P3D);
   background(255);
   //println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  port = new Serial(this, "com6", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  port = new Serial(this, "com13", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
   
   send_request();
   time = millis();
@@ -63,8 +63,8 @@ void draw() {
   fill(255);
   
   drawWindow(0 , 0 , 37);
-  drawWindow(600 , 0 , 38);
-  drawWindow(0 , 300 , 39);
+  //drawWindow(600 , 0 , 38);
+  //drawWindow(0 , 300 , 39);
   
   if (millis() - time >= timeOut){
     send_request();
@@ -79,8 +79,8 @@ void drawWindow(int x , int y , int address)
   int w = x + _w;
   int h = y + _h;
   noFill();
-  rect(x, y, 600, 300);
-  rect(w-250, y, 250, 250);
+  rect(x, y, _w, _h);
+  //rect(w-250, y, 250, 250);
   textSize(50);
   fill(0);
   text("Num.", x+20, y+40); text(str(address), x+150, y+40);
@@ -103,6 +103,21 @@ void drawWindow(int x , int y , int address)
   }
   fill(red_p[idx],green_p[idx],blue_p[idx]);
   rect(w-250-100, y, 100, 100);
+  
+  stroke(255);
+  translate(600,300,-100);
+  rotateX(radians(-30));
+  rotateY(radians(135));
+  
+  drawAxis();
+  //rotateX(radians((float)pitch_p[idx]));
+  rotateY(- radians((float)yaw_p[idx]-270));
+  fill(255);
+  stroke(0);
+  box(100,100,400);
+  
+  
+  
 }
 
 void keyPressed() { // keyが押されると呼ばれる関数
@@ -228,4 +243,81 @@ int cnv(int x)
     return x-65535; 
   }
   return x;
+}
+
+void drawAxis()
+{
+  //X軸
+  stroke(255,0,0);
+  beginShape();
+  vertex(0,0,0);
+  vertex(-300,0, 0);
+  vertex(-300,0, 0);
+  vertex(0,0, 0);
+  endShape();
+  //X軸の文字[E]
+  stroke(255,0,0);
+  beginShape();
+  vertex(-310,0,0);
+  vertex(-330,0, 0);
+  vertex(-330,0, 0);
+  vertex(-310,0, 0);
+  endShape();
+  stroke(255,0,0);
+  beginShape();
+  vertex(-310,0,0);
+  vertex(-310,0, -10);
+  vertex(-310,0, -10);
+  vertex(-310,0, 0);
+  endShape();
+  stroke(255,0,0);
+  beginShape();
+  vertex(-320,0,0);
+  vertex(-320,0, -10);
+  vertex(-320,0, -10);
+  vertex(-320,0, 0);
+  endShape();
+  stroke(255,0,0);
+  beginShape();
+  vertex(-330,0,0);
+  vertex(-330,0, -10);
+  vertex(-330,0, -10);
+  vertex(-330,0, 0);
+  endShape();
+  //Y軸
+  stroke(0,255,0);
+  beginShape();
+  vertex(0,0,0);
+  vertex(0,-300, 0);
+  vertex(0,-300, 0);
+  vertex(0,0, 0);
+  endShape();
+  
+  //Z軸
+  stroke(0,0,255);
+  beginShape();
+  vertex(0,0,0);
+  vertex(0,0, 300);
+  vertex(0,0, 300);
+  vertex(0,0, 0);
+  endShape();
+  //Z軸の文字[N]
+  beginShape();
+  vertex(-10,0,310);
+  vertex(-10,0, 330);
+  vertex(-10,0, 330);
+  vertex(-10,0, 310);
+  endShape();
+  beginShape();
+  vertex(10,0,310);
+  vertex(10,0, 330);
+  vertex(10,0, 330);
+  vertex(10,0, 310);
+  endShape();
+  beginShape();
+  vertex(-10,0,310);
+  vertex(10,0, 330);
+  vertex(10,0, 330);
+  vertex(-10,0, 310);
+  endShape();
 }
